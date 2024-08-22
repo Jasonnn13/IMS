@@ -20,17 +20,6 @@ class LevelController extends Controller
         return view('level.index', compact('nol', 'satu', 'dua'));
     }
 
-    public function index2()
-    {
-        // Query users based on their level
-        $nol = User::where('level', 0)->get(); 
-        $satu = User::where('level', 1)->get();
-        $dua = User::where('level', 2)->get();
-
-
-        // Pass the variables to the view
-        return view('level.index2', compact('nol', 'satu', 'dua'));
-    }
 
     /**
      * Show the form for editing the specified resource.
@@ -68,11 +57,9 @@ class LevelController extends Controller
         // Update the user's level
         $user->update(['level' => $request->level]);
     
-        // Determine the redirect route based on user level
-        $redirectRoute = auth()->user()->level >= 2 ? 'level2' : 'level';
     
         // Redirect back with a success message
-        return redirect()->route($redirectRoute)->with('success', 'User level updated successfully.');
+        return redirect()->route('level.index')->with('success', 'User level updated successfully.');
     }
     
 
@@ -90,10 +77,8 @@ class LevelController extends Controller
         // Delete the user
         $user->delete();
     
-        // Determine the redirect route based on user level
-        $redirectRoute = auth()->user()->level >= 2 ? 'level2' : 'level';
     
         // Redirect back with a success message
-        return redirect()->route($redirectRoute)->with('success', 'User deleted successfully.');
+        return redirect()->route('level.index')->with('success', 'User deleted successfully.');
     }
 }

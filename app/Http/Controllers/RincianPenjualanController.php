@@ -27,10 +27,11 @@ class RincianPenjualanController extends Controller
 
     public function store(Request $request)
     {
+        // Validate the incoming request data
         $validated = $request->validate([
             'penjualan_id' => 'required|exists:penjualan,id',
             'items' => 'required|array',
-            'items.*.stock_id' => 'required|exists:stocks,id',
+            'items.*.name' => 'required|string|exists:stocks,name',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
     
@@ -41,12 +42,11 @@ class RincianPenjualanController extends Controller
         $insufficientStockItems = [];
     
         foreach ($items as $item) {
-            $stock = Stock::findOrFail($item['stock_id']);
-            
+            $stock = Stock::where('name', $item['name'])->first();
+    
             // Check if the stock quantity is sufficient
             if ($stock->stock < $item['quantity']) {
                 $insufficientStockItems[] = [
-                    'stock_id' => $item['stock_id'],
                     'stock_name' => $stock->name,
                     'required_quantity' => $item['quantity'],
                     'available_quantity' => $stock->stock
@@ -56,43 +56,45 @@ class RincianPenjualanController extends Controller
     
             $price = $stock->jual;
     
+            // Create RincianPenjualan record
             RincianPenjualan::create([
                 'penjualan_id' => $penjualanId,
-                'stocks_id' => $item['stock_id'],
+                'stocks_id' => $stock->id,
                 'quantity' => $item['quantity'],
                 'price' => $price,
                 'total' => $price * $item['quantity'],
             ]);
     
+            // Decrement stock quantity
             $stock->stock -= $item['quantity'];
             $stock->save();
     
             $totalAmount += $item['quantity'] * $price;
         }
     
+        // Handle insufficient stock items
         if (!empty($insufficientStockItems)) {
             $errorMessages = [];
             foreach ($insufficientStockItems as $item) {
-                $errorMessages[] = "{$item['stock_name']} (Stock ID: {$item['stock_id']}): Required {$item['required_quantity']} but only {$item['available_quantity']} available.";
+                $errorMessages[] = "{$item['stock_name']}: Required {$item['required_quantity']} but only {$item['available_quantity']} available.";
             }
             return redirect()->back()->withErrors(['items' => $errorMessages])->withInput();
         }
     
+        // Update the total for the penjualan
         $penjualan = Penjualan::findOrFail($penjualanId);
-
-    
-        $penjualan->total = $penjualan->rincianpenjualans()->sum('total');
-        $penjualan->total_netto = $penjualan->rincianpenjualans()->sum('total') - (($penjualan->diskon/100) * $penjualan->total);
-        $dpp = $penjualan->total_netto/1.11;
+        $penjualan->total = $totalAmount;
+        $penjualan->total_netto = $totalAmount - (($penjualan->diskon/100) * $totalAmount);
+        $dpp = $penjualan->total_netto / 1.11;
         $ppn = $penjualan->total_netto - $dpp;
         $penjualan->dpp = $dpp;
         $penjualan->ppn = $ppn;
-        
         $penjualan->save();
-
     
         return redirect()->route('penjualan.index')->with('success', 'Items added and updated successfully');
     }
+    
+    
     
     public function edit($id)
     {

@@ -14,7 +14,8 @@ class RincianPembelianController extends Controller
     public function index($pembelian_id)
     {
         $pembelian = Pembelian::findOrFail($pembelian_id);
-        $rincianpembelians = RincianPembelian::where('pembelian_id', $pembelian_id)->get();
+        $rincianpembelians = RincianPembelian::where('pembelian_id', $pembelian_id)->orderBy('created_at', 'desc')->get();
+        
         return view('rincianpembelian.index', compact('pembelian', 'rincianpembelians'));
     }
 
@@ -37,11 +38,10 @@ class RincianPembelianController extends Controller
             'items.new.*.name' => 'nullable|string',
             'items.new.*.quantity' => 'nullable|integer|min:0',
             'items.new.*.price' => 'nullable|numeric|min:0',
-            'items.new.*.kode' => 'nullable|string',  // Add kode validation
-            'items.existing.*.stock_id' => 'required|exists:stocks,id',
+            'items.new.*.kode' => 'nullable|string',
+            'items.existing.*.name' => 'required|string|exists:stocks,name',
             'items.existing.*.quantity' => 'required|integer|min:0',
             'items.existing.*.price' => 'required|numeric|min:0',
-            'items.existing.*.kode' => 'nullable|string',  // Add kode validation
         ]);
     
         $supplierId = $validated['supplier_id'];
@@ -62,7 +62,7 @@ class RincianPembelianController extends Controller
                         'name' => $name,
                         'stock' => $quantity,
                         'suppliers_id' => $supplierId,
-                        'kode' => $kode,  // Store kode
+                        'kode' => $kode,
                         'beli' => $price,
                     ]);
                     
@@ -74,9 +74,6 @@ class RincianPembelianController extends Controller
                         'price' => $price,
                         'total' => $price * $quantity,
                     ]);
-    
-                    
-                    
                 }
             }
         }
@@ -84,31 +81,29 @@ class RincianPembelianController extends Controller
         // Handle existing items
         if (isset($items['existing']) && is_array($items['existing'])) {
             foreach ($items['existing'] as $existingItem) {
-                $kode = $existingItem['kode'] ?? '';  // Get kode
+                $stock = Stock::where('name', $existingItem['name'])->first();
     
-                // Create rincian pembelian entry for existing items
-                RincianPembelian::create([
-                    'pembelian_id' => $pembelianId,
-                    'stocks_id' => $existingItem['stock_id'],
-                    'quantity' => $existingItem['quantity'],
-                    'price' => $existingItem['price'],
-                    'total' => $existingItem['price'] * $existingItem['quantity'],
-                ]);
+                if ($stock) {
+                    // Create rincian pembelian entry for existing items
+                    RincianPembelian::create([
+                        'pembelian_id' => $pembelianId,
+                        'stocks_id' => $stock->id,
+                        'quantity' => $existingItem['quantity'],
+                        'price' => $existingItem['price'],
+                        'total' => $existingItem['price'] * $existingItem['quantity'],
+                    ]);
     
-                // Update stock quantity
-                $stock = Stock::find($existingItem['stock_id']);
-                $stock->kode = $kode;  // Update kode
-                $stock->beli = $existingItem['price'];  // Update beli
-                $stock->stock += $existingItem['quantity'];
-
-                $stock->save();
+                    // Update stock quantity
+                    $stock->beli = $existingItem['price'];  // Update beli
+                    $stock->stock += $existingItem['quantity'];
     
-                
-                
+                    $stock->save();
+                }
             }
         }
+        
     
-        return redirect()->route('pembelian.index')->with('success', 'Items added and updated successfully');
+        return redirect()->route('rincianpembelian.index', $pembelianId)->with('success', 'Items added and updated successfully');
     }
     
 

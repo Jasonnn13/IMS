@@ -33,9 +33,12 @@ class PenjualanController extends Controller
             $query->whereYear('penjualan.created_at', $year)
                   ->whereMonth('penjualan.created_at', $month);
         }
+
+        $query->orderBy('penjualan.created_at', 'desc');
     
-        // Pagination
-        $penjualan = $query->paginate(15); // Adjust the number of items per page as needed
+        // Get the results
+        $penjualan = $query->get();
+
     
         return view('penjualan.index', compact('penjualan', 'search', 'month', 'year'));
     }

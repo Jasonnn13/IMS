@@ -150,7 +150,62 @@
         .hidden {
             display: none;
         }
+        .ui-menu {
+            background-color: #2c2c2c;
+            color: #fff;
+            border: 1px solid #5a5a5a;
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            position: absolute;
+            z-index: 1000;
+        }
+        /* Custom CSS for the autocomplete suggestion box */
+        .ui-autocomplete {
+            background-color: #2e2e2e !important; /* Matches the body background color */
+            color: #3a3a3a !important;
+            border: 1px solid #5a5a5a !important;
+            z-index: 1000 !important;
+            border-radius: 5px !important;
+        }
+
+        /* Customize the individual item styles */
+        .ui-menu-item {
+            padding: 10px !important;
+            font-size: 14px !important;
+            background-color: #2e2e2e !important; /* Matches the suggestion box background */
+            border-bottom: 1px solid #5a5a5a !important;
+            color: #3a3a3a !important;
+        }
+
+        /* Target the item wrapper directly for hover and active states */
+        .ui-menu-item:hover > .ui-menu-item-wrapper,
+        .ui-menu-item.ui-state-active > .ui-menu-item-wrapper,
+        .ui-menu-item.ui-state-focus > .ui-menu-item-wrapper {
+            background-color: #3a3a3a !important; /* Slightly lighter gray for the active item */
+            color: #3a3a3a !important; /* Ensure text color remains white */
+            border: none !important;
+        }
+
+        /* Ensure the font color is white */
+        .ui-menu-item .ui-menu-item-wrapper {
+            color: #ffffff !important;
+            font-family: 'Arial', sans-serif !important;
+        }
+
+        /* Hide the default focus border */
+        .ui-helper-hidden-accessible {
+            display: none !important;
+        }
+        .ui-helper-hidden-accessible{
+            background-color: #3a3a3a !important; /* Slightly lighter gray for the active item */
+            color: #3a3a3a !important; /* Ensure text color remains white */
+        }
     </style>
+    <!-- jQuery and jQuery UI -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
 </head>
 <body>
     <div class="container">
@@ -198,7 +253,6 @@
 
                     </div>
                 </form>
-
             </section>
         </main>
     </div>
@@ -213,7 +267,7 @@
 
             const newItemHTML = `
                 <div class="item">
-                <h3>New Items</h3>
+                    <h3>New Items</h3>
                     <div class="form-group">
                         <label for="new-item-name-${newItemIndex}">Item Name</label>
                         <input type="text" id="new-item-name-${newItemIndex}" name="items[new][${newItemIndex}][name]" placeholder="Enter new item name" required>
@@ -244,14 +298,10 @@
 
             const existingItemsHTML = `
                 <div class="item">
-                <h3>Existing Items</h3>
+                    <h3>Existing Items</h3>
                     <div class="form-group">
-                        <label for="stock_id-${existingItemsAdded}">Select Existing Item</label>
-                        <select id="stock_id-${existingItemsAdded}" name="items[existing][${existingItemsAdded}][stock_id]" required>
-                            @foreach($stocks as $stock)
-                                <option value="{{ $stock->id }}">{{ $stock->name }}</option>
-                            @endforeach
-                        </select>
+                        <label for="stock-input-${existingItemsAdded}">Select Existing Item</label>
+                        <input type="text" id="stock-input-${existingItemsAdded}" name="items[existing][${existingItemsAdded}][name]" class="form-control" placeholder="Enter item name" required>
                     </div>
                     <div class="form-group">
                         <label for="quantity-${existingItemsAdded}">Quantity</label>
@@ -263,15 +313,34 @@
                     </div>
                     <button type="button" class="delete-button" onclick="removeItem(this)">Delete</button>
                 </div>
+
             `;
 
             container.insertAdjacentHTML('beforeend', existingItemsHTML);
             existingItemsAdded++;
+
+            // Initialize autocomplete for the newly added input
+            $(`#stock-input-${existingItemsAdded - 1}`).autocomplete({
+                source: function(request, response) {
+                    $.ajax({
+                        url: '/stocks/autocomplete',
+                        dataType: 'json',
+                        data: {
+                            term: request.term
+                        },
+                        success: function(data) {
+                            response(data);
+                        }
+                    });
+                },
+                select: function(event, ui) {
+                    $(this).val(ui.item.label); 
+                }
+            });
         }
 
         function removeItem(button) {
-            const item = button.closest('.item');
-            item.remove();
+            button.parentElement.remove();
         }
     </script>
 </body>

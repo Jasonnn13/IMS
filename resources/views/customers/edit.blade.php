@@ -169,7 +169,7 @@
                     </div>
                     <div class="form-group">
                         <label for="customer-address">Address</label>
-                        <input type="text" id="customer-address" name="address" required>
+                        <input type="text" id="customer-address" name="address" value="{{ $customer->address }}" required>
                     </div>
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Update Customer</button>

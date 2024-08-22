@@ -33,11 +33,15 @@ class PembelianController extends Controller
                   ->whereMonth('pembelian.created_at', $month);
         }
     
-        // Pagination
-        $pembelian = $query->paginate(15); // Adjust the number of items per page as needed
+        // Order by newest created_at
+        $query->orderBy('pembelian.created_at', 'desc');
+    
+        // Get the results
+        $pembelian = $query->get();
     
         return view('pembelian.index', compact('pembelian', 'search', 'month', 'year'));
     }
+    
     
 
 

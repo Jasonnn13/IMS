@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js" integrity="sha512-AA1Bzp5Q0K1KanKKmvN/4d3IRKVlv9PYgwFPvm32nPO6QS8yH1HO7LbgB1pgiOxPtfeg5zEn2ba64MUcqJx6CA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stocks</title>
@@ -214,6 +216,7 @@
                     </form>
                 </div>
                 
+                
                 @php
                     $hasZeroHargaJual = false;
                 @endphp
@@ -232,7 +235,10 @@
                     </div>
                 @endif  
 
-                <h3>Stock List  </h3>
+                <div class="category-header">
+                    <h3>Stocks List</h3>
+                    <a href="{{ route('stocks.create') }}" class="btn btn-primary">Add Stock</a>
+                </div>
                 <table>
                     <thead>
                         <tr>
@@ -262,9 +268,9 @@
                                         <form action="{{ route('stocks.destroy', $stock->id) }}" method="POST" style="display: inline;">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="delete" style="background: none; border: none; cursor: pointer;">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
+                                            <button type="submit" class="delete" style="background: none; border: none; cursor: pointer;" onclick="confirmation(event)">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
                                         </form>
                                     </div>
                                 </td>
@@ -275,5 +281,37 @@
             </section>
         </main>
     </div>
+    <script>
+        // Pass user level from Blade to JavaScript
+        const userLevel = @json(Auth::user()->level);
+
+        function confirmation(event) {
+            event.preventDefault(); // Prevent the form from submitting immediately
+            event.stopPropagation(); // Stop the event from propagating to the <tr> click event
+
+            if (userLevel < 2) {
+                swal({
+                    title: "Sorry, you don't have permission to delete this stock",
+                    text: "This action cannot be undone.",
+                    icon: "error",
+                    button: "OK",
+                });
+            } else {
+                swal({
+                    title: "Are you sure you want to delete this stock?",
+                    text: "This action cannot be undone.",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                })
+                .then((willDelete) => {
+                    if (willDelete) {
+                        // If the user confirms, reload the page
+                        event.target.closest('form').submit();
+                    }
+                });
+            }
+        }
+    </script>
 </body>
 </html>

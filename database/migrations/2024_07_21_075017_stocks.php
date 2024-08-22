@@ -15,10 +15,9 @@ return new class extends Migration
             $table->decimal('beli', 19, 2)->default(0);
             $table->decimal('jual', 19, 2)->default(0);
             $table->foreignId('suppliers_id')->constrained()->onDelete('cascade');
-            $table->timestamps(); // Adds created_at and updated_at columns
+            $table->timestamps();
         });
     }
-
     public function down()
     {
         Schema::dropIfExists('stocks');

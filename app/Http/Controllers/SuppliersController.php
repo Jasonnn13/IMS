@@ -17,6 +17,7 @@ class SuppliersController extends Controller
                 return $query->where('name', 'like', "%{$search}%")
                              ->orWhere('contact_information', 'like', "%{$search}%");
             })
+            ->orderBy('created_at', 'desc') // Order by newest created_at
             ->get();
 
         return view('suppliers.index', compact('suppliers', 'search'));
@@ -67,6 +68,7 @@ class SuppliersController extends Controller
 
         return redirect()->route('suppliers.index')->with('success', 'Supplier updated successfully.');
     }
+
 
     public function destroy($id)
     {

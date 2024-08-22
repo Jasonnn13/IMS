@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Levels</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js" integrity="sha512-AA1Bzp5Q0K1KanKKmvN/4d3IRKVlv9PYgwFPvm32nPO6QS8yH1HO7LbgB1pgiOxPtfeg5zEn2ba64MUcqJx6CA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
@@ -207,7 +209,7 @@
                 </form>
             </header>
             <section class="content">
-                <!-- Level 2 level -->
+                <!-- Level 2 Users -->
                 <h2>Level 2 Users</h2>
                 <table>
                     <thead>
@@ -222,11 +224,13 @@
                             <tr>
                                 <td>{{ $user->name }}</td>
                                 <td>{{ $user->email }}</td>
+                                <td></td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
-                <!-- Level 1 level -->
+                
+                <!-- Level 1 Users -->
                 <h2>Level 1 Users</h2>
                 <table>
                     <thead>
@@ -241,11 +245,30 @@
                             <tr>
                                 <td>{{ $user->name }}</td>
                                 <td>{{ $user->email }}</td>
+                                @if (Auth::user()->level > 1)
+                                    <td>
+                                        <div class="action-icons">
+                                            <a href="{{ route('level.edit', $user->id) }}" class="edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form action="{{ route('level.destroy', $user->id) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="delete" style="background: none; border: none; cursor: pointer;" onclick="confirmation(event)">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                    @else
+                                    <td></td>
+                                @endif
                             </tr>
                         @endforeach
                     </tbody>
-                </table>    
-                <!-- Level 0 level -->
+                </table>
+
+                <!-- Level 0 Users -->
                 <h2>Level 0 Users</h2>
                 <table>
                     <thead>
@@ -260,30 +283,48 @@
                             <tr>
                                 <td>{{ $user->name }}</td>
                                 <td>{{ $user->email }}</td>
-                                <td>
-                                    <div class="action-icons">
-                                        <a href="{{ route('level.edit', $user->id) }}" class="edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form action="{{ route('level.destroy', $user->id) }}" method="POST" style="display: inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="delete" style="background: none; border: none; cursor: pointer;">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
+                                @if (Auth::user()->level > 0)
+                                    <td>
+                                        <div class="action-icons">
+                                            <a href="{{ route('level.edit', $user->id) }}" class="edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form action="{{ route('level.destroy', $user->id) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="delete" style="background: none; border: none; cursor: pointer;" onclick="confirmation(event)">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
-
-                
-
-                
             </section>
         </main>
     </div>
+    <script>
+    function confirmation(event) {
+        event.stopPropagation(); // Stop the event from propagating to the <tr> click event
+        event.preventDefault();   // Prevent the form from submitting immediately
+
+        swal({
+            title: "Are you sure you want to delete this user?",
+            text: "This action cannot be undone.",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                // If the user confirms, submit the form
+                event.target.closest('form').submit();
+            }
+        });
+    }
+    </script>
 </body>
 </html>

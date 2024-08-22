@@ -171,7 +171,7 @@
                     </div>
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Update Level</button>
-                        <a href="{{ route(Auth::user()->level >= 2 ? 'level2' : 'level') }}" class="btn btn-secondary">Back</a>
+                        <a href="{{ route('level.index') }}" class="btn btn-secondary">Back</a>
                     </div>
                 </form> 
             </section>

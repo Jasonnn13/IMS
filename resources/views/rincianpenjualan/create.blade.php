@@ -155,6 +155,47 @@
             margin-top: 10px;
             display: none;
         }
+        /* Custom CSS for the autocomplete suggestion box */
+        .ui-autocomplete {
+            background-color: #2e2e2e !important; /* Matches the body background color */
+            color: #3a3a3a !important;
+            border: 1px solid #5a5a5a !important;
+            z-index: 1000 !important;
+            border-radius: 5px !important;
+        }
+
+        /* Customize the individual item styles */
+        .ui-menu-item {
+            padding: 10px !important;
+            font-size: 14px !important;
+            background-color: #2e2e2e !important; /* Matches the suggestion box background */
+            border-bottom: 1px solid #5a5a5a !important;
+            color: #3a3a3a !important;
+        }
+
+        /* Target the item wrapper directly for hover and active states */
+        .ui-menu-item:hover > .ui-menu-item-wrapper,
+        .ui-menu-item.ui-state-active > .ui-menu-item-wrapper,
+        .ui-menu-item.ui-state-focus > .ui-menu-item-wrapper {
+            background-color: #3a3a3a !important; /* Slightly lighter gray for the active item */
+            color: #3a3a3a !important; /* Ensure text color remains white */
+            border: none !important;
+        }
+
+        /* Ensure the font color is white */
+        .ui-menu-item .ui-menu-item-wrapper {
+            color: #ffffff !important;
+            font-family: 'Arial', sans-serif !important;
+        }
+
+        /* Hide the default focus border */
+        .ui-helper-hidden-accessible {
+            display: none !important;
+        }
+        .ui-helper-hidden-accessible{
+            background-color: #3a3a3a !important; /* Slightly lighter gray for the active item */
+            color: #3a3a3a !important; /* Ensure text color remains white */
+        }
     </style>
 </head>
 <body>
@@ -213,80 +254,93 @@
             </section>
         </main>
     </div>
-
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
     <script>
-let existingItemsAdded = 0;
+    let existingItemsAdded = 0;
 
-function addExistingItems() {
-    const container = document.getElementById('items-container');
-    container.classList.remove('hidden');
+    function addExistingItems() {
+        const container = document.getElementById('items-container');
+        container.classList.remove('hidden');
 
-    const existingItemsHTML = `
-        <div class="item">
-            <div class="form-group">
-                <label for="stock_id-${existingItemsAdded}">Select Existing Item</label>
-                <select id="stock_id-${existingItemsAdded}" name="items[${existingItemsAdded}][stock_id]" onchange="updateAvailableQuantity(${existingItemsAdded})" required>
-                    @foreach($stocks as $stock)
-                        <option value="{{ $stock->id }}" data-quantity="{{ $stock->quantity }}">{{ $stock->name }}</option>
-                    @endforeach
-                </select>
+        const existingItemsHTML = `
+            <div class="item">
+                <h3>Existing Items</h3>
+                <div class="form-group">
+                    <label for="stock_id-${existingItemsAdded}">Select Existing Item</label>
+                    <input type="text" id="stock-input-${existingItemsAdded}" name="items[${existingItemsAdded}][name]" class="form-control" placeholder="Enter item name" required>
+                </div>
+                <div class="form-group">
+                    <label for="quantity-${existingItemsAdded}">Quantity</label>
+                    <input type="number" id="quantity-${existingItemsAdded}" name="items[${existingItemsAdded}][quantity]" min="1" required>
+                </div>
+                <button type="button" class="delete-button" onclick="removeItem(this)">Delete</button>
             </div>
-            <div class="form-group">
-                <label for="quantity-${existingItemsAdded}">Quantity</label>
-                <input type="number" id="quantity-${existingItemsAdded}" name="items[${existingItemsAdded}][quantity]" min="1" required>
-            </div>
-            <button type="button" class="delete-button" onclick="removeItem(this)">Delete</button>
-        </div>
-    `;
+        `;
 
-    container.insertAdjacentHTML('beforeend', existingItemsHTML);
-    existingItemsAdded++;
-}
+        container.insertAdjacentHTML('beforeend', existingItemsHTML);
+        existingItemsAdded++;
 
-function removeItem(button) {
-    const item = button.closest('.item');
-    item.remove();
-}
+        // Initialize autocomplete for the newly added input
+        $(`#stock-input-${existingItemsAdded - 1}`).autocomplete({
+            source: function(request, response) {
+                $.ajax({
+                    url: '/stocks/autocomplete',
+                    dataType: 'json',
+                    data: {
+                        term: request.term
+                    },
+                    success: function(data) {
+                        response(data);
+                    }
+                });
+            },
+            select: function(event, ui) {
+                $(this).val(ui.item.label);
+                // Store available quantity as a data attribute on the input
+                $(this).attr('data-quantity', ui.item.quantity);
+            }
+        });
+    }
 
-function updateAvailableQuantity(index) {
-    const select = document.getElementById(`stock_id-${index}`);
-    const quantityInput = document.getElementById(`quantity-${index}`);
-    const selectedOption = select.options[select.selectedIndex];
-    const availableQuantity = selectedOption.getAttribute('data-quantity');
-    quantityInput.setAttribute('max', availableQuantity);
-}
+    function removeItem(button) {
+        const item = button.closest('.item');
+        item.remove();
+    }
 
-function validateQuantities() {
-    let isValid = true;
-    let errorMessage = '';
+    function validateQuantities() {
+        let isValid = true;
+        let errorMessage = '';
 
-    const items = document.querySelectorAll('#items-container .item');
-    items.forEach(item => {
-        const select = item.querySelector('select');
-        const quantityInput = item.querySelector('input[type="number"]');
-        const availableQuantity = select.options[select.selectedIndex].getAttribute('data-quantity');
-        
-        if (parseInt(quantityInput.value) > parseInt(availableQuantity)) {
-            errorMessage += `Item ${select.options[select.selectedIndex].text} quantity exceeds available stock! `;
-            isValid = false;
+        const items = document.querySelectorAll('#items-container .item');
+        items.forEach(item => {
+            const stockInput = item.querySelector('input[name^="items"]');
+            const quantityInput = item.querySelector('input[type="number"]');
+            const availableQuantity = stockInput.getAttribute('data-quantity');
+
+            if (availableQuantity && parseInt(quantityInput.value) > parseInt(availableQuantity)) {
+                errorMessage += `Item ${stockInput.value} quantity exceeds available stock! `;
+                isValid = false;
+            }
+        });
+
+        if (!isValid) {
+            alert(errorMessage);
+        }
+
+        return isValid;
+    }
+
+    document.getElementById('penjualan-form').addEventListener('submit', function(event) {
+        if (!validateQuantities()) {
+            event.preventDefault(); // Prevent form submission if validation fails
+            document.getElementById('warning-message').style.display = 'block'; // Show warning message
+            return false; // Prevent form submission
         }
     });
-
-    if (!isValid) {
-        alert(errorMessage);
-    }
-
-    return isValid;
-}
-
-document.getElementById('penjualan-form').addEventListener('submit', function(event) {
-    console.log('Form submit event triggered');
-    if (!validateQuantities()) {
-        event.preventDefault(); // Prevent form submission if validation fails
-        document.getElementById('warning-message').style.display = 'block'; // Show warning message
-        return false; // Prevent form submission
-    }
-});
 </script>
+
 </body>
 </html>

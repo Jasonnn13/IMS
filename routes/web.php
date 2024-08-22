@@ -48,30 +48,23 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::resource('suppliers', SuppliersController::class);
     Route::resource('pembelian', PembelianController::class);
     Route::resource('penjualan', PenjualanController::class);
-    Route::resource('stocks', StockController::class);
+    
+    Route::get('/stocks', [StockController::class, 'index'])->name('stocks.index');
+    Route::get('/stocks/create', [StockController::class, 'create'])->name('stocks.create');
+    Route::post('/stocks', [StockController::class, 'store'])->name('stocks.store');
+    Route::delete('/stocks/{stock}', [StockController::class, 'destroy'])->name('stocks.destroy');
+    Route::get('/stocks/{stock}/edit', [StockController::class, 'edit'])->name('stocks.edit');
+    Route::put('/stocks/{stock}', [StockController::class, 'update'])->name('stocks.update');
+    Route::get('/stocks/autocomplete', [StockController::class, 'autocomplete']);
 
+    
     // Additional routes that require authentication and verification
     Route::get('/laporan/profit', [LaporanController::class, 'profit'])->name('laporan.profit');
     Route::get('/rincianpenjualan/{penjualan_id}/invoice', [PdfgenerateController::class, 'generatePDF'])->name('rincianpenjualan.invoice');
     
+    Route::resource('level', LevelController::class);
 
-    // Route for users with level 0 or 1
-    Route::get('/level', [LevelController::class, 'index'])->name('level');
-
-    // Route for users with level 2
-    Route::middleware(['level'])->group(function () {
-        Route::get('/level2', [LevelController::class, 'index2'])->name('level2');
-    });
-
-
-    // Route for editing a user
-    Route::get('/level/{id}/edit', [LevelController::class, 'edit'])->name('level.edit');
-
-    // Route for updating a user
-    Route::put('/level/{id}', [LevelController::class, 'update'])->name('level.update');
-
-    // Route for deleting a user
-    Route::delete('/level/{id}', [LevelController::class, 'destroy'])->name('level.destroy');
+    
     
 });
 

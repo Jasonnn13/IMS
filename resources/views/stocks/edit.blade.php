@@ -180,6 +180,13 @@
                         @enderror
                     </div>
                     <div class="form-group">
+                        <label for="beli">Harga Beli</label>
+                        <input type="number" id="beli" name="beli" step="0.01" min="0" value="{{ old('stocks', $stocks->beli) }}"required>
+                        @error('stocks')
+                            <div class="error" style="color: #f44336;">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="form-group">
                         <label for="jual">Harga Jual</label>
                         <input type="number" id="jual" name="jual" step="0.01" min="0" value="{{ old('stocks', $stocks->jual) }}"required>
                         @error('stocks')

@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js" integrity="sha512-AA1Bzp5Q0K1KanKKmvN/4d3IRKVlv9PYgwFPvm32nPO6QS8yH1HO7LbgB1pgiOxPtfeg5zEn2ba64MUcqJx6CA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Penjualan</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -256,9 +258,9 @@
                                         <form action="{{ route('penjualan.destroy', $penjualan->id) }}" method="POST" style="display:inline;">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="delete" style="background: none; border: none; cursor: pointer;">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
+                                            <button type="submit" class="delete" style="background: none; border: none; cursor: pointer;" onclick="confirmation(event)">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
                                         </form>
                                     </div>
                                 </td>
@@ -269,5 +271,25 @@
             </section>
         </main>
     </div>
+    <script>
+    function confirmation(event) {
+        event.stopPropagation(); // Stop the event from propagating to the <tr> click event
+        event.preventDefault();   // Prevent the form from submitting immediately
+
+        swal({
+            title: "Are you sure you want to delete this record?",
+            text: "This action cannot be undone.",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                // If the user confirms, submit the form
+                event.target.closest('form').submit();
+            }
+        });
+    }
+</script>
 </body>
 </html>

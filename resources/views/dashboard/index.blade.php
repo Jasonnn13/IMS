@@ -269,7 +269,7 @@
                     <div class="card">
                         <div class="card-number">{{$countReq}}</div>
                         <div class="card-title">Perizinan</div>
-                        <a href="{{ route(Auth::user()->level >= 2 ? 'level2' : 'level') }}" class="card-link">Atur Perizinan➔</a>
+                        <a href="{{ route('level.index') }}" class="card-link">Atur Perizinan➔</a>
                         <div class="card-icon">🪪</div>
                     </div>
 

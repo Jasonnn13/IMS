@@ -169,7 +169,7 @@
                     </div>
                     <div class="form-group">
                         <label for="total">Harga Akhir</label>
-                        <input type="number" id="total" name="total" step="0.01" min="0" required>
+                        <input type="number" id="total" name="total" step="0.01" min="0" value="{{$pembelian->total}}" required>
                     </div>
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Update Pembelian</button>

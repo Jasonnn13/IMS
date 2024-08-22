@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Supplier</title>
+    <title>Add Stock</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -127,28 +127,29 @@
             background-color: #f44336;
             color: #fff;
         }
+        .error {
+            color: #f44336;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <aside class="sidebar">
-            <div class="logo">
-                <img src="logo.png" alt="Logo">
-            </div>
             <nav class="menu">
                 <ul>
                     <li><a href="/dashboard">Dashboard</a></li>
-                    <li><a href="/stocks">Stocks</a></li>
+                    <li><a href="/stocks" class="active">Stocks</a></li>
                     <li><a href="/pembelian">Pembelian</a></li>
                     <li><a href="/penjualan">Penjualan</a></li>
-                    <li><a href="/suppliers" class="active">Suppliers</a></li>
+                    <li><a href="/suppliers">Suppliers</a></li>
                     <li><a href="/customers">Customers</a></li>
                 </ul>
             </nav>
         </aside>
         <main class="main-content">
             <header class="header">
-                <h1>Edit Supplier</h1>
+                <h1>Add Stock</h1>
                 <div class="user-info">
                     <span>{{ Auth::user()->name }}</span>
                     <button class="logout-button" onclick="document.getElementById('logout-form').submit();">Logout</button>
@@ -158,24 +159,54 @@
                 </form>
             </header>
             <section class="content">
-                <h2>Edit Supplier</h2>
-                <form action="{{ route('suppliers.update', $supplier->id) }}" method="POST">
+                <form action="{{ route('stocks.store') }}" method="POST">
                     @csrf
-                    @method('PUT')
                     <div class="form-group">
-                        <label for="supplier-name">Name</label>
-                        <input type="text" id="supplier-name" name="name" value="{{ $supplier->name }}" required>
+                        <label for="name">Name</label>
+                        <input type="text" id="name" name="name" value="{{ old('name') }}" required>
+                        @error('name')
+                            <div class="error">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="form-group">
-                        <label for="supplier-contact-information">Contact Information</label>
-                        <input type="text" id="supplier-contact-information" name="contact_information" value="{{ $supplier->contact_information }}" required>
+                        <label for="suppliers_id">Supplier</label>
+                        <select id="suppliers_id" name="suppliers_id" required>
+                            @foreach($suppliers as $supplier)
+                                <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label for="supplier-address">Address</label>
-                        <input type="text" id="supplier-address" name="address" value="{{ $supplier->address }}"  required>
+                        <label for="kode">Kode</label>
+                        <input type="text" id="kode" name="kode" value="{{ old('kode') }}" required>
+                        @error('kode')
+                            <div class="error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="form-group">
+                        <label for="stocks">Stocks</label>
+                        <input type="number" id="stocks" name="stock" value="{{ old('stock') }}" required>
+                        @error('stock')
+                            <div class="error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="form-group">
+                        <label for="beli">Harga Beli</label>
+                        <input type="number" id="beli" name="beli" step="0.01" min="0" value="{{ old('beli') }}" required>
+                        @error('beli')
+                            <div class="error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="form-group">
+                        <label for="jual">Harga Jual</label>
+                        <input type="number" id="jual" name="jual" step="0.01" min="0" value="{{ old('jual') }}" required>
+                        @error('jual')
+                            <div class="error">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Update Supplier</button>
+                        <button type="submit" class="btn btn-primary">Create Stock</button>
+                        <a href="{{ route('stocks.index') }}" class="btn btn-secondary">Back</a>
                     </div>
                 </form>
             </section>

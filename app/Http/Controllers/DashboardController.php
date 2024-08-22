@@ -37,17 +37,17 @@ class DashboardController extends Controller
         for ($i = 11; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
             $months[] = $date->format('M Y');
-            $penjualanMonths[] = $date->format('M Y'); // To be used for Penjualan chart
-            $pembelianMonths[] = $date->format('M Y'); // To be used for Pembelian chart
-            $profitMonths[] = $date->format('M Y'); // To be used for Profit chart
+            $penjualanMonths[] = $date->format('M Y');
+            $pembelianMonths[] = $date->format('M Y');
+            $profitMonths[] = $date->format('M Y');
 
             $penjualanTotal = Penjualan::whereMonth('created_at', $date->month)
                                         ->whereYear('created_at', $date->year)
-                                        ->sum('total'); // Assuming 'total' field in ekonomi
+                                        ->sum('total');
 
             $pembelianTotal = Pembelian::whereMonth('created_at', $date->month)
                                         ->whereYear('created_at', $date->year)
-                                        ->sum('total'); // Assuming 'total' field in ekonomi
+                                        ->sum('total');
                 
             $profit = $penjualanTotal - $pembelianTotal;
 
