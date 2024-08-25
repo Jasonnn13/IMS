@@ -12,6 +12,14 @@
             color: #fff;
             background-color: #1f1f1f;
         }
+        .hamburger {
+            display: none; /* Hide by default on larger screens */
+            font-size: 1.5em;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #fff;
+        }
         .container {
             display: flex;
             height: 100vh;
@@ -100,7 +108,7 @@
             display: block;
             margin-bottom: 5px;
         }
-        .form-group input, .form-group textarea, .form-group select {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 10px;
             border: 1px solid #5a5a5a;
@@ -127,6 +135,78 @@
             background-color: #f44336;
             color: #fff;
         }
+        /* Mobile-specific styles */
+        @media (max-width: 480px) {
+            .hamburger {
+                display: block; /* Show hamburger on small screens */
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 250px;
+                height: 100%;
+                z-index: 1000;
+                overflow-x: hidden;
+                background-color: #2c2c2c;
+                padding: 20px;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .backdrop {
+                display: none; /* Hide by default */
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+                z-index: 900; /* Behind sidebar but above content */
+                transition: opacity 0.3s ease;
+            }
+
+            .backdrop.show {
+                display: block;
+            }
+
+            .menu-toggle {
+                display: block;
+                background-color: #4caf50;
+                color: #fff;
+                padding: 10px;
+                cursor: pointer;
+                border: none;
+                border-radius: 5px;
+                margin: 10px;
+            }
+
+            .header {
+                padding: 10px;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+                align-self: center;
+                text-align: center;
+            }
+
+            .main-content {
+                padding: 10px; /* Reduce padding for smaller screens */
+                margin-left: 0; /* No left margin on small screens */
+            }
+
+            .user-name {
+                display: none; /* Hide user-name on small screens */
+            }
+        }
     </style>
 </head>
 <body>
@@ -134,7 +214,7 @@
         <aside class="sidebar">
             <nav class="menu">
                 <ul>
-                    <li><a href="/dashboard">Dashboard</a></li>
+                    <li><a href="/dashboard" class="active">Dashboard</a></li>
                     <li><a href="/stocks">Stocks</a></li>
                     <li><a href="/pembelian">Pembelian</a></li>
                     <li><a href="/penjualan">Penjualan</a></li>
@@ -143,11 +223,13 @@
                 </ul>
             </nav>
         </aside>
+        <div class="backdrop" id="backdrop" onclick="toggleSidebar()"></div>
         <main class="main-content">
             <header class="header">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
                 <h1>Edit User Level</h1>
                 <div class="user-info">
-                    <span>{{ Auth::user()->name }}</span>
+                    <span class="user-name">{{ Auth::user()->name }}</span>
                     <button class="logout-button" onclick="document.getElementById('logout-form').submit();">Logout</button>
                 </div>
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
@@ -177,5 +259,13 @@
             </section>
         </main>
     </div>
+    <script>
+                function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const backdrop = document.getElementById('backdrop');
+            sidebar.classList.toggle('show');
+            backdrop.classList.toggle('show');
+        }
+    </script>
 </body>
 </html>

@@ -38,7 +38,7 @@
         }
 
         .logout-button {
-            background-color: #3498db;
+            background-color: red;
             color: white;
             border: none;
             padding: 5px 10px;
@@ -47,7 +47,7 @@
         }
 
         .logout-button:hover {
-            background-color: #2980b9;
+            background-color: red;
         }
 
         .waiting-container {

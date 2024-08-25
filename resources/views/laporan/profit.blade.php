@@ -13,6 +13,14 @@
             color: #fff;
             background-color: #1f1f1f;
         }
+        .hamburger {
+            display: none; /* Hide by default on larger screens */
+            font-size: 1.5em;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #fff;
+        }   
         .container {
             display: flex;
             height: 100vh;
@@ -117,11 +125,10 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
-            text-align: center;
         }
         th, td {
             padding: 10px;
-            text-align: center;
+            text-align: left;
             border-bottom: 1px solid #5a5a5a;
         }
         th {
@@ -180,6 +187,121 @@
         .action-icons .delete {
             color: #f44336;
         }
+        .overdue {
+            background-color: #ff4444; /* Red background for overdue */
+        }
+
+        .overdue:hover {
+            background-color: #cc0000; /* Darker red on hover for overdue */
+        }
+        .cards-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Space between cards */
+        }
+
+        .card {
+            background-color: #3c3c3c;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h4 {
+            margin: 0;
+            font-size: 1.2em;
+        }
+
+        .card p {
+            margin: 5px 0;
+        }
+
+        .card strong {
+            color: #4caf50; /* Highlight key information */
+        }
+
+    @media (max-width: 480px) {
+        .hamburger {
+            display: block; /* Show hamburger on small screens */
+        }
+
+        .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 250px;
+                height: 100%;
+                z-index: 1000;
+                overflow-x: hidden;
+                background-color: #2c2c2c;
+                padding: 20px;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .backdrop {
+                display: none; /* Hide by default */
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+                z-index: 900; /* Behind sidebar but above content */
+                transition: opacity 0.3s ease;
+            }
+
+            .backdrop.show {
+                display: block;
+            }
+
+        .menu-toggle {
+            display: block;
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin: 10px;
+        }
+
+        .user-name {
+            display: none; /* Hide user info on small screens */
+        }
+
+        .main-content {
+            padding: 10px; /* Reduce padding for smaller screens */
+            margin-left: 0; /* No left margin on small screens */
+        }
+
+        .container {
+            flex-direction: column;
+        }
+
+        .menu li a {
+            padding: 8px;
+        }
+
+        .header {
+            padding: 10px;
+            /* flex-direction: column; */
+            align-items: center;
+            justify-content: space-between;
+
+        }
+
+        .header h1 {
+            font-size: 1.5em;
+            align-self: center;
+            text-align: center;
+        }
+    }
+       
     </style>
 </head>
 <body>
@@ -196,11 +318,13 @@
                 </ul>
             </nav>
         </aside>
+        <div class="backdrop" id="backdrop" onclick="toggleSidebar()"></div>
         <main class="main-content">
             <header class="header">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
                 <h1>Profit Report</h1>
                 <div class="user-info">
-                    <span>{{ Auth::user()->name }}</span>
+                    <span class="user-name">{{ Auth::user()->name }}</span>
                     <button class="logout-button" onclick="document.getElementById('logout-form').submit();">Logout</button>
                 </div>
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
@@ -213,36 +337,32 @@
                     <canvas id="profitChart"></canvas>
                 </div>
 
-                <!-- Profit Table -->
+                <!-- Profit Report Cards -->
                 <h3>Monthly Profit Data</h3>
-                <table>
-                    <thead>
-                        <tr style="text-align:center;">
-                            <th>Tahun</th>
-                            <th>Bulan</th>
-                            <th>Pengeluaran</th>
-                            <th>Pemasukan</th>
-                            <th>Profit</th>
-                        </tr>
-                    </thead>
-                    <tbody style="text-align:center;">
-                        @foreach($laporans as $laporan)
-                            <tr>
-                                <td>{{ $laporan->tahun }}</td>
-                                <td>{{ $laporan->bulan }}</td>
-                                <td>{{ $laporan->pengeluaran }}</td>
-                                <td>{{ $laporan->pemasukan }}</td>
-                                <td>{{ $laporan->profit }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                <div class="cards-wrapper">
+                    @foreach($laporans as $laporan)
+                        <div class="card">
+                            <h4>{{ $laporan->tahun }} - {{ $laporan->bulan }}</h4>
+                            <p><strong>Pengeluaran:</strong> Rp. {{ number_format($laporan->pengeluaran, 2, ',', '.') }}</p>
+                            <p><strong>Pemasukan:</strong> Rp. {{ number_format($laporan->pemasukan, 2, ',', '.') }}</p>
+                            <p><strong>Profit:</strong> Rp. {{ number_format($laporan->profit, 2, ',', '.') }}</p>
+                        </div>
+                    @endforeach
+                </div>
             </section>
+
         </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+                function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const backdrop = document.querySelector('.backdrop'); // Fixed selector here
+            sidebar.classList.toggle('show');
+            backdrop.classList.toggle('show');
+        }
+
     document.addEventListener('DOMContentLoaded', function() {
         // Chart.js configuration for the profit chart
         var ctxProfit = document.getElementById('profitChart').getContext('2d');

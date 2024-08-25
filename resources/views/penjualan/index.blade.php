@@ -15,6 +15,14 @@
             color: #fff;
             background-color: #1f1f1f;
         }
+        .hamburger {
+            display: none; /* Hide by default on larger screens */
+            font-size: 1.5em;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #fff;
+        }   
         .container {
             display: flex;
             height: 100vh;
@@ -175,15 +183,131 @@
             font-size: 18px;
             color: #fff;
         }
-        .action-icons .download {
-            color: #4caf50;
-        }
         .action-icons .edit {
-            color: #ffeb3b;
+            color: #4caf50;
         }
         .action-icons .delete {
             color: #f44336;
         }
+        .overdue {
+            background-color: #ff4444; /* Red background for overdue */
+        }
+
+        .overdue:hover {
+            background-color: #cc0000; /* Darker red on hover for overdue */
+        }
+    @media (max-width: 480px) {
+        .hamburger {
+            display: block; /* Show hamburger on small screens */
+        }
+
+        .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 250px;
+                height: 100%;
+                z-index: 1000;
+                overflow-x: hidden;
+                background-color: #2c2c2c;
+                padding: 20px;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .backdrop {
+                display: none; /* Hide by default */
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+                z-index: 900; /* Behind sidebar but above content */
+                transition: opacity 0.3s ease;
+            }
+
+            .backdrop.show {
+                display: block;
+            }
+
+        .menu-toggle {
+            display: block;
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin: 10px;
+        }
+
+        .user-name {
+            display: none; /* Hide user info on small screens */
+        }
+
+        .main-content {
+            padding: 10px; /* Reduce padding for smaller screens */
+            margin-left: 0; /* No left margin on small screens */
+        }
+
+        .container {
+            flex-direction: column;
+        }
+
+        .menu li a {
+            padding: 8px;
+        }
+
+        .header {
+            padding: 10px;
+            /* flex-direction: column; */
+            align-items: center;
+            justify-content: space-between;
+
+        }
+
+        .header h1 {
+            font-size: 1.5em;
+            align-self: center;
+            text-align: center;
+        }
+        table {
+        width: 100%; /* Make the table full width */
+        border-collapse: collapse; /* Ensure borders are collapsed */
+        }
+        th, td {
+            display: block; /* Make table cells block elements */
+            width: 100%; /* Full width for cells */
+            box-sizing: border-box; /* Include padding and border in element's total width and height */
+            padding: 10px; /* Add some padding */
+            text-align: left; /* Align text to the left */
+        }
+        thead {
+            display: none; /* Hide the header on small screens */
+        }
+        tr {
+            display: block; /* Make each row a block */
+            margin-bottom: 10px; /* Add space between rows */
+            border-bottom: 1px solid #5a5a5a; /* Add a border between rows */
+            background-color: #2e2e2e; /* Background color for each row */
+            border: 1px solid #4caf50; /* Add a green border around each cell */
+            gap: 20px; /* Add some space between cells */
+        }
+        tr:last-child {
+            border-bottom: none; /* Remove border from the last row */
+        }
+        td::before {
+            content: attr(data-label); /* Add labels for each cell */
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px; /* Space between label and data */
+        }
+    }
     </style>
 </head>
 <body>
@@ -200,11 +324,13 @@
                 </ul>
             </nav>
         </aside>
+        <div class="backdrop" id="backdrop" onclick="toggleSidebar()"></div>
         <main class="main-content">
             <header class="header">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
                 <h1>Penjualan</h1>
                 <div class="user-info">
-                    <span>{{ Auth::user()->name }}</span>
+                    <span class="user-name">{{ Auth::user()->name }}</span>
                     <button class="logout-button" onclick="document.getElementById('logout-form').submit();">Logout</button>
                 </div>
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
@@ -231,7 +357,6 @@
                             <th>Sales</th>
                             <th>Tenggat</th>
                             <th>Modified By</th>
-                            <th>Updated At</th>
                             <th>Created At</th>
                             <th>Actions</th>
                         </tr>
@@ -239,15 +364,14 @@
                     <tbody>
                         @foreach($penjualan as $penjualan)
                             <tr class="{{ $penjualan->status == 'Belum Lunas' && \Carbon\Carbon::now()->gt($penjualan->tenggat_waktu) ? 'overdue' : '' }}" onclick="window.location='{{ route('rincianpenjualan.index', ['penjualan_id' => $penjualan->id]) }}'">
-                                <td>{{ $penjualan->customer->name }}</td>
-                                <td>{{ $penjualan->total_netto }}</td>
-                                <td>{{ $penjualan->status }}</td>
-                                <td>{{ $penjualan->sales }}</td>
-                                <td>{{ $penjualan->tenggat_waktu }}</td>
-                                <td>{{ $penjualan->user->name }}</td>
-                                <td>{{ $penjualan->updated_at->format('Y-m-d') }}</td>
-                                <td>{{ $penjualan->created_at->format('Y-m-d') }}</td>
-                                <td>
+                                <td data-label="Name">{{ $penjualan->customer->name }}</td>
+                                <td data-label="Total Netto">Rp. {{ $penjualan->total_netto }}</td>
+                                <td data-label="Status">{{ $penjualan->status }}</td>
+                                <td data-label="Sales">{{ $penjualan->sales }}</td>
+                                <td data-label="Tenggat">{{ $penjualan->tenggat_waktu }}</td>
+                                <td data-label="Modified By">{{ $penjualan->user->name }}</td>
+                                <td data-label="Created At">{{ $penjualan->created_at->format('Y-m-d') }}</td>
+                                <td data-label="Action">
                                     <div class="action-icons">
                                         <a href="{{ route('rincianpenjualan.invoice', $penjualan->id) }}" class="download">
                                             <i class="fas fa-download"></i>
@@ -272,6 +396,12 @@
         </main>
     </div>
     <script>
+                function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const backdrop = document.getElementById('backdrop');
+            sidebar.classList.toggle('show');
+            backdrop.classList.toggle('show');
+        }
     function confirmation(event) {
         event.stopPropagation(); // Stop the event from propagating to the <tr> click event
         event.preventDefault();   // Prevent the form from submitting immediately

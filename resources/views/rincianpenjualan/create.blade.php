@@ -75,6 +75,14 @@
         .header h1 {
             margin: 0;
         }
+        .hamburger {
+            display: none; /* Hide by default on larger screens */
+            font-size: 1.5em;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #fff;
+        }
         .user-info {
             display: flex;
             align-items: center;
@@ -196,6 +204,77 @@
             background-color: #3a3a3a !important; /* Slightly lighter gray for the active item */
             color: #3a3a3a !important; /* Ensure text color remains white */
         }
+        @media (max-width: 480px) {
+            .hamburger {
+                display: block; /* Show hamburger on small screens */
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 250px;
+                height: 100%;
+                z-index: 1000;
+                overflow-x: hidden;
+                background-color: #2c2c2c;
+                padding: 20px;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .backdrop {
+                display: none; /* Hide by default */
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+                z-index: 900; /* Behind sidebar but above content */
+                transition: opacity 0.3s ease;
+            }
+
+            .backdrop.show {
+                display: block;
+            }
+
+            .menu-toggle {
+                display: block;
+                background-color: #4caf50;
+                color: #fff;
+                padding: 10px;
+                cursor: pointer;
+                border: none;
+                border-radius: 5px;
+                margin: 10px;
+            }
+
+            .header {
+                padding: 10px;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+                align-self: center;
+                text-align: center;
+            }
+
+            .main-content {
+                padding: 10px; /* Reduce padding for smaller screens */
+                margin-left: 0; /* No left margin on small screens */
+            }
+
+            .user-name {
+                display: none; /* Hide user-name on small screens */
+            }
+        }
     </style>
 </head>
 <body>
@@ -212,11 +291,13 @@
                 </ul>
             </nav>
         </aside>
+        <div class="backdrop" onclick="toggleSidebar()"></div>
         <main class="main-content">
             <header class="header">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
                 <h1>Add Items to Penjualan</h1>
                 <div class="user-info">
-                    <span>{{ Auth::user()->name }}</span>
+                    <span class="user-name">{{ Auth::user()->name }}</span>
                     <button class="logout-button" onclick="document.getElementById('logout-form').submit();">Logout</button>
                 </div>
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
@@ -259,88 +340,96 @@
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
     <script>
-    let existingItemsAdded = 0;
 
-    function addExistingItems() {
-        const container = document.getElementById('items-container');
-        container.classList.remove('hidden');
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const backdrop = document.querySelector('.backdrop');
+            sidebar.classList.toggle('show');
+            backdrop.classList.toggle('show');
+        }   
 
-        const existingItemsHTML = `
-            <div class="item">
-                <h3>Existing Items</h3>
-                <div class="form-group">
-                    <label for="stock_id-${existingItemsAdded}">Select Existing Item</label>
-                    <input type="text" id="stock-input-${existingItemsAdded}" name="items[${existingItemsAdded}][name]" class="form-control" placeholder="Enter item name" required>
+        let existingItemsAdded = 0;
+
+        function addExistingItems() {
+            const container = document.getElementById('items-container');
+            container.classList.remove('hidden');
+
+            const existingItemsHTML = `
+                <div class="item">
+                    <h3>Existing Items</h3>
+                    <div class="form-group">
+                        <label for="stock_id-${existingItemsAdded}">Select Existing Item</label>
+                        <input type="text" id="stock-input-${existingItemsAdded}" name="items[${existingItemsAdded}][name]" class="form-control" placeholder="Enter item name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity-${existingItemsAdded}">Quantity</label>
+                        <input type="number" id="quantity-${existingItemsAdded}" name="items[${existingItemsAdded}][quantity]" min="1" required>
+                    </div>
+                    <button type="button" class="delete-button" onclick="removeItem(this)">Delete</button>
                 </div>
-                <div class="form-group">
-                    <label for="quantity-${existingItemsAdded}">Quantity</label>
-                    <input type="number" id="quantity-${existingItemsAdded}" name="items[${existingItemsAdded}][quantity]" min="1" required>
-                </div>
-                <button type="button" class="delete-button" onclick="removeItem(this)">Delete</button>
-            </div>
-        `;
+            `;
 
-        container.insertAdjacentHTML('beforeend', existingItemsHTML);
-        existingItemsAdded++;
+            container.insertAdjacentHTML('beforeend', existingItemsHTML);
+            existingItemsAdded++;
 
-        // Initialize autocomplete for the newly added input
-        $(`#stock-input-${existingItemsAdded - 1}`).autocomplete({
-            source: function(request, response) {
-                $.ajax({
-                    url: '/stocks/autocomplete',
-                    dataType: 'json',
-                    data: {
-                        term: request.term
-                    },
-                    success: function(data) {
-                        response(data);
-                    }
-                });
-            },
-            select: function(event, ui) {
-                $(this).val(ui.item.label);
-                // Store available quantity as a data attribute on the input
-                $(this).attr('data-quantity', ui.item.quantity);
-            }
-        });
-    }
-
-    function removeItem(button) {
-        const item = button.closest('.item');
-        item.remove();
-    }
-
-    function validateQuantities() {
-        let isValid = true;
-        let errorMessage = '';
-
-        const items = document.querySelectorAll('#items-container .item');
-        items.forEach(item => {
-            const stockInput = item.querySelector('input[name^="items"]');
-            const quantityInput = item.querySelector('input[type="number"]');
-            const availableQuantity = stockInput.getAttribute('data-quantity');
-
-            if (availableQuantity && parseInt(quantityInput.value) > parseInt(availableQuantity)) {
-                errorMessage += `Item ${stockInput.value} quantity exceeds available stock! `;
-                isValid = false;
-            }
-        });
-
-        if (!isValid) {
-            alert(errorMessage);
+            // Initialize autocomplete for the newly added input
+            $(`#stock-input-${existingItemsAdded - 1}`).autocomplete({
+                source: function(request, response) {
+                    $.ajax({
+                        url: '/stocks/autocomplete',
+                        dataType: 'json',
+                        data: {
+                            term: request.term
+                        },
+                        success: function(data) {
+                            response(data);
+                        }
+                    });
+                },
+                select: function(event, ui) {
+                    $(this).val(ui.item.label);
+                    // Store available quantity as a data attribute on the input
+                    $(this).attr('data-quantity', ui.item.quantity);
+                }
+            });
         }
 
-        return isValid;
-    }
-
-    document.getElementById('penjualan-form').addEventListener('submit', function(event) {
-        if (!validateQuantities()) {
-            event.preventDefault(); // Prevent form submission if validation fails
-            document.getElementById('warning-message').style.display = 'block'; // Show warning message
-            return false; // Prevent form submission
+        function removeItem(button) {
+            const item = button.closest('.item');
+            item.remove();
         }
-    });
-</script>
+
+        function validateQuantities() {
+            let isValid = true;
+            let errorMessage = '';
+
+            const items = document.querySelectorAll('#items-container .item');
+            items.forEach(item => {
+                const stockInput = item.querySelector('input[name^="items"]');
+                const quantityInput = item.querySelector('input[type="number"]');
+                const availableQuantity = stockInput.getAttribute('data-quantity');
+
+                if (availableQuantity && parseInt(quantityInput.value) > parseInt(availableQuantity)) {
+                    errorMessage += `Item ${stockInput.value} quantity exceeds available stock! `;
+                    isValid = false;
+                }
+            });
+
+            if (!isValid) {
+                alert(errorMessage);
+            }
+
+            return isValid;
+        }
+
+        document.getElementById('penjualan-form').addEventListener('submit', function(event) {
+            if (!validateQuantities()) {
+                event.preventDefault(); // Prevent form submission if validation fails
+                document.getElementById('warning-message').style.display = 'block'; // Show warning message
+                return false; // Prevent form submission
+            }
+        });
+    </script>
 
 </body>
 </html>

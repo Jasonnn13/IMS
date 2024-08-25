@@ -15,6 +15,14 @@
             color: #fff;
             background-color: #1f1f1f;
         }
+        .hamburger {
+            display: none; /* Hide by default on larger screens */
+            font-size: 1.5em;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #fff;
+        }   
         .container {
             display: flex;
             height: 100vh;
@@ -181,6 +189,126 @@
         .action-icons .delete {
             color: #f44336;
         }
+        .overdue {
+            background-color: #ff4444; /* Red background for overdue */
+        }
+
+        .overdue:hover {
+            background-color: #cc0000; /* Darker red on hover for overdue */
+        }
+    @media (max-width: 480px) {
+        .hamburger {
+            display: block; /* Show hamburger on small screens */
+        }
+
+        .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 250px;
+                height: 100%;
+                z-index: 1000;
+                overflow-x: hidden;
+                background-color: #2c2c2c;
+                padding: 20px;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .backdrop {
+                display: none; /* Hide by default */
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+                z-index: 900; /* Behind sidebar but above content */
+                transition: opacity 0.3s ease;
+            }
+
+            .backdrop.show {
+                display: block;
+            }
+
+        .menu-toggle {
+            display: block;
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin: 10px;
+        }
+
+        .user-name {
+            display: none; /* Hide user info on small screens */
+        }
+
+        .main-content {
+            padding: 10px; /* Reduce padding for smaller screens */
+            margin-left: 0; /* No left margin on small screens */
+        }
+
+        .container {
+            flex-direction: column;
+        }
+
+        .menu li a {
+            padding: 8px;
+        }
+
+        .header {
+            padding: 10px;
+            /* flex-direction: column; */
+            align-items: center;
+            justify-content: space-between;
+
+        }
+
+        .header h1 {
+            font-size: 1.5em;
+            align-self: center;
+            text-align: center;
+        }
+        table {
+        width: 100%; /* Make the table full width */
+        border-collapse: collapse; /* Ensure borders are collapsed */
+        }
+        th, td {
+            display: block; /* Make table cells block elements */
+            width: 100%; /* Full width for cells */
+            box-sizing: border-box; /* Include padding and border in element's total width and height */
+            padding: 10px; /* Add some padding */
+            text-align: left; /* Align text to the left */
+        }
+        thead {
+            display: none; /* Hide the header on small screens */
+        }
+        tr {
+            display: block; /* Make each row a block */
+            margin-bottom: 10px; /* Add space between rows */
+            border-bottom: 1px solid #5a5a5a; /* Add a border between rows */
+            background-color: #2e2e2e; /* Background color for each row */
+            border: 1px solid #4caf50; /* Add a green border around each cell */
+            gap: 20px; /* Add some space between cells */
+        }
+        tr:last-child {
+            border-bottom: none; /* Remove border from the last row */
+        }
+        td::before {
+            content: attr(data-label); /* Add labels for each cell */
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px; /* Space between label and data */
+        }
+
+    }
     </style>
 </head>
 <body>
@@ -197,11 +325,13 @@
                 </ul>
             </nav>
         </aside>
+        <div class="backdrop" onclick="toggleSidebar()"></div>
         <main class="main-content">
             <header class="header">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
                 <h1>Stocks</h1>
                 <div class="user-info">
-                    <span>{{ Auth::user()->name }}</span>
+                    <span class="user-name">{{ Auth::user()->name }}</span>
                     <button class="logout-button" onclick="document.getElementById('logout-form').submit();">Logout</button>
                 </div>
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
@@ -253,14 +383,17 @@
                     </thead>
                     <tbody>
                         @foreach($stocks as $stock)
-                            <tr>
-                                <td>{{ $stock->name }}</td>
-                                <td>{{ $stock->kode }}</td>
-                                <td>{{ $stock->stock }}</td>
-                                <td>{{ $stock->supplier->name ?? 'No Supplier' }}</td>
-                                <td>{{ $stock->beli }}</td>
-                                <td>{{ $stock->jual }}</td>
-                                <td>
+                            @php
+                                $isOverdue = $stock->jual == 0 || empty($stock->jual);
+                            @endphp
+                            <tr class="{{ $isOverdue ? 'overdue' : '' }}">
+                                <td data-label="Name">{{ $stock->name }}</td>
+                                <td data-label="Kode">{{ $stock->kode }}</td>
+                                <td data-label="Stocks">{{ $stock->stock }}</td>
+                                <td data-label="Supplier">{{ $stock->supplier->name ?? 'No Supplier' }}</td>
+                                <td data-label="Harga Beli">{{ $stock->beli }}</td>
+                                <td data-label="Harga Jual">{{ $stock->jual }}</td>
+                                <td data-label="Actions">
                                     <div class="action-icons">
                                         <a href="{{ route('stocks.edit', $stock->id) }}" class="edit">
                                             <i class="fas fa-edit"></i>
@@ -282,6 +415,12 @@
         </main>
     </div>
     <script>
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const backdrop = document.querySelector('.backdrop');
+            sidebar.classList.toggle('show');
+            backdrop.classList.toggle('show');
+        }
         // Pass user level from Blade to JavaScript
         const userLevel = @json(Auth::user()->level);
 
